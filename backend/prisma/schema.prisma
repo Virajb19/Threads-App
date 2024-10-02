@@ -14,6 +14,10 @@ generator client {
     password  String 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+    lastLogin DateTime @default(now())
+    isVerified Boolean @default(false)
+    verificationCode String?
+    verificationCodeExpiresAt DateTime?
     name      String?
     profilePicture String? @default("")
     bio String? @default("")

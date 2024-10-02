@@ -2,27 +2,25 @@ import { signInSchema, signUpSchema } from "../types/userTypes.js";
 import { prisma } from "../utils/db.js";
 import bcrypt from 'bcrypt'
 import { generateToken } from "../utils/generateTokenAndSetCookie.js";
+import { sendVerificationEmail } from "../emails/Emails.js";
 
 export async function signup(req,res) {
  try {
     const userData = signUpSchema.safeParse(req.body)
-
     if(!userData.success) return res.status(400).json({error : 'Invalid user inputs', userData})
-
     const {username, email, password} = userData.data
-
-    if(!username || !email || !password) return res.status(400).json({error: 'All inputs required'})
 
     const userExists = await prisma.user.findFirst({where : {OR : [{email}, {username}]}})
     if(userExists) return res.status(409).json({error: 'User already exists'})
 
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password,salt)
-    const user = await prisma.user.create({data : {username, email, password: hashedPassword}})
+    const verificationCode = Math.floor(Math.random() * 900000 + 100000).toString()
+    const user = await prisma.user.create({data : {username, email, password: hashedPassword, verificationCode, verificationCodeExpiresAt: new Date(Date.now() + 15 * 60 * 1000)}})
 
     const token = generateToken(user.id, res)
 
-    
+    await sendVerificationEmail(user.email, verificationCode, res)
 
     const {password: _, ...userWithoutPassword} = user
 
@@ -30,14 +28,14 @@ export async function signup(req,res) {
    
  } catch(err) {
        console.error(err)
-       res.status(500).json({error: 'Internal server error'})
+       res.status(500).json({msg: 'Error while signing up', error: err})
  }
 }
 
 export async function signin(req,res) {
  try {
     const userData = signInSchema.safeParse(req.body)
-    if(!userData.success) return res.status(400).json({error: 'Invalid user inputs'})
+    if(!userData.success) return res.status(400).json({error: 'Invalid user inputs', userData})
 
     const {email, password} = userData.data
 
@@ -47,13 +45,15 @@ export async function signin(req,res) {
 
     const token = generateToken(user.id, res)
 
-    const {password: _, ...userResponse} = user
+    const updatedUser = await prisma.user.update({where: {email}, data: {lastLogin: new Date()}})
+
+    const {password: _, ...userResponse} = updatedUser
 
     res.status(200).json({success: true, msg: 'Logged in successfully',user: userResponse, token})
 
  } catch(err) {
      console.error(err)
-     res.status(500).json({error: 'Error while logging in'})
+     res.status(500).json({msg: 'Error while logging in', error: err})
  }
 }
 
@@ -63,6 +63,6 @@ export async function signout(req,res) {
         res.status(200).json({success: true, msg: 'Logges out successfully'})
     } catch(err) {
         console.error(err)
-        res.status(500).json({error: 'Error while signing out'})
+        res.status(500).json({success: false, msg: 'Error while signing out', error: err})
     }
 }
