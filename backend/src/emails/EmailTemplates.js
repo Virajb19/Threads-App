@@ -93,3 +93,56 @@ export const PASSWORD_RESET_REQUEST_TEMPLATE = `
 </body>
 </html>
 `;
+export const WELCOME_EMAIL_TEMPLATE = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="en">
+
+<head>
+  <link rel="preload" as="image" href="https://placeholder.com/wp-content/uploads/2018/10/placeholder.com-logo3.png" />
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  <meta name="x-apple-disable-message-reformatting" />
+</head>
+
+<body style="background-color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,Roboto,Oxygen-Sans,Ubuntu,Cantarell,&quot;Helvetica Neue&quot;,sans-serif">
+  <div style="display:none;overflow:hidden;line-height:1px;opacity:0;max-height:0;max-width:0">
+    Welcome to Threads - Your new space for meaningful conversations.
+    <div> ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿</div>
+  </div>
+
+  <table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="max-width:37.5em;margin:0 auto;padding:20px 0 48px">
+    <tbody>
+      <tr style="width:100%">
+        <td>
+          <img alt="Threads" height="50" src="https://imgs.search.brave.com/XdLwbjHSedty07tySemps-TfbYVu2s5AqwkOHdtmSMc/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9jZG4u/bW9zLmNtcy5mdXR1/cmVjZG4ubmV0LzRt/cTlUOUc4alhGV0h3/SlgyTEpiRC0zMjAt/ODAuanBn" style="display:block;outline:none;border:none;text-decoration:none;margin:0 auto" width="170" />
+          <p style="font-size:16px;line-height:26px;margin:16px 0">Hi {userName},</p>
+          <p style="font-size:16px;line-height:26px;margin:16px 0">Welcome to Threads, your new space for meaningful conversations and connections.</p>
+          <table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="text-align:center">
+            <tbody>
+              <tr>
+                <td>
+                  <a href="https://threads.net" style="line-height:100%;text-decoration:none;display:block;max-width:100%;mso-padding-alt:0px;background-color:#000000;border-radius:3px;color:#ffffff;font-size:16px;text-align:center;padding:12px 12px 12px 12px" target="_blank">
+                    <span><!--[if mso]><i style="mso-font-width:300%;mso-text-raise:18" hidden>&#8202;&#8202;</i><![endif]--></span>
+                    <span style="max-width:100%;display:inline-block;line-height:120%;mso-padding-alt:0px;mso-text-raise:9px">Start Threading</span>
+                    <span><!--[if mso]><i style="mso-font-width:300%" hidden>&#8202;&#8202;&#8203;</i><![endif]--></span>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="font-size:16px;line-height:26px;margin:16px 0">Here's what you can do to get started:</p>
+          <ul style="font-size:16px;line-height:26px;margin:16px 0">
+            <li>Complete your profile</li>
+            <li>Follow your favorite creators</li>
+            <li>Start your first thread</li>
+          </ul>
+          <p style="font-size:16px;line-height:26px;margin:16px 0">We can't wait to see what conversations you'll spark!</p>
+          <p style="font-size:16px;line-height:26px;margin:16px 0">Best,<br />The Threads Team</p>
+          <hr style="width:100%;border:none;border-top:1px solid #eaeaea;border-color:#cccccc;margin:20px 0" />
+          <p style="font-size:12px;line-height:24px;margin:16px 0;color:#8898aa">1 Hacker Way, Menlo Park, CA 94025</p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+
+</html>`

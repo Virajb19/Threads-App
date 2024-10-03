@@ -1,9 +1,9 @@
-import { signInSchema, signUpSchema } from "../types/userTypes.js";
+import { codeSchema, signInSchema, signUpSchema } from "../types/userTypes.js";
 import { prisma } from "../utils/db.js";
 import bcrypt from 'bcrypt'
 import { generateToken } from "../utils/generateTokenAndSetCookie.js";
-import { sendVerificationEmail } from "../emails/Emails.js";
-
+import { sendVerificationEmail, sendWelcomeEmail } from "../emails/Emails.js";
+// WHAT IF CODE EXPIRES ???
 export async function signup(req,res) {
  try {
     const userData = signUpSchema.safeParse(req.body)
@@ -57,12 +57,33 @@ export async function signin(req,res) {
  }
 }
 
-export async function signout(req,res) {
+export async function signout(_,res) {
     try {
         res.clearCookie("jwt")
-        res.status(200).json({success: true, msg: 'Logges out successfully'})
+        res.status(200).json({success: true, msg: 'Logged out successfully'})
     } catch(err) {
         console.error(err)
         res.status(500).json({success: false, msg: 'Error while signing out', error: err})
+    }
+}
+
+export async function verifyEmail(req,res) {
+    try{
+      const parsedData = codeSchema.safeParse(req.body)
+      if(!parsedData.success) return res.status(400).json({error: 'Invalid code', parsedData})
+      const { code } = parsedData.data
+
+      const user = await prisma.user.findFirst({where: {verificationCode: code, verificationCodeExpiresAt: {gt: new Date()}}})
+      if(!user) return res.status(401).json({success: false, error: 'code expired or incorrect code'})
+
+      const updatedUser = await prisma.user.update({where: {id: user.id}, data: {isVerified: true, verificationCode: null, verificationCodeExpiresAt: null}})
+
+      await sendWelcomeEmail(user.email, user.username, res)
+
+      res.status(200).json({success: true, msg: 'Email verified successfully', updatedUser})
+
+      } catch (e) {
+       console.error(e)
+       return res.status(500).json({success: false, msg: 'Error while verifying email', error: e})
     }
 }
