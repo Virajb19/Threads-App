@@ -18,24 +18,16 @@ generator client {
     isVerified Boolean @default(false)
     verificationCode String?
     verificationCodeExpiresAt DateTime?
+    resetPasswordToken String?
+    resetPasswordTokenExpiresAt DateTime?
     name      String?
     profilePicture String? @default("")
     bio String? @default("")
-    followers     Follow[]  @relation("FollowingUser")
-    following     Follow[]  @relation("FollowedUser")
+    followers     Int[]
+    following     Int[]
     replies Reply[]
     likes Like[]
     posts Post[]
-  }
-  
-  model Follow {
-    id String @id @default(cuid())
-    followerId Int
-    follower User @relation("FollowingUser", fields: [followerId], references: [id])
-    followedId  Int
-    followed    User   @relation("FollowedUser", fields: [followedId], references: [id])
-  
-    @@unique([followedId, followerId])
   }
   
   model Post {

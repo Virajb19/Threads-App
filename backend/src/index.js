@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 import { prisma } from './utils/db.js'
 import rateLimit from 'express-rate-limit'
 import { userRouter } from './routes/userRoutes.js'
+import { verifyToken } from './middlewares/verifyToken.js'
 
 dotenv.config({})
 
@@ -18,13 +19,18 @@ const generalLimiter = rateLimit({
 })
 
 //MIDDLEWARES
-app.use(express.json())
+app.use(express.json({ limit : '50mb' }))
 app.use(cookieParser())
 app.use(cors({origin: process.env.CLIENT_URL, credentials: true}))
 app.use(generalLimiter)
+app.use((req,res,next) => {
+  if(req.path === '/signin' || req.path === '/signup') return next()
+  //PROTECTED ROUTES
+  verifyToken(req,res,next)
+})
 
 // ROUTES
-app.use('/api/user/v1', userRouter)
+app.use('/api/v1/user', userRouter)
 
 
 app.get("/", (_, res) => res.send("<h1>Hello world</h1>"))

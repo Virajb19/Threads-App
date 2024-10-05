@@ -1,9 +1,10 @@
-import { codeSchema, signInSchema, signUpSchema } from "../types/userTypes.js";
+import { codeSchema, forgotPasswordSchema, resetPasswordSchema, signInSchema, signUpSchema, updateProfileSchema } from "../types/userTypes.js";
 import { prisma } from "../utils/db.js";
 import bcrypt from 'bcrypt'
 import { generateToken } from "../utils/generateTokenAndSetCookie.js";
-import { sendVerificationEmail, sendWelcomeEmail } from "../emails/Emails.js";
-// WHAT IF CODE EXPIRES ???
+import { sendPasswordResetEmail, sendResetSuccessEmail, sendVerificationEmail, sendWelcomeEmail } from "../emails/Emails.js";
+import crypto from 'crypto'
+
 export async function signup(req,res) {
  try {
     const userData = signUpSchema.safeParse(req.body)
@@ -16,7 +17,7 @@ export async function signup(req,res) {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password,salt)
     const verificationCode = Math.floor(Math.random() * 900000 + 100000).toString()
-    const user = await prisma.user.create({data : {username, email, password: hashedPassword, verificationCode, verificationCodeExpiresAt: new Date(Date.now() + 15 * 60 * 1000)}})
+    const user = await prisma.user.create({data : {username, email, password: hashedPassword, verificationCode, verificationCodeExpiresAt: new Date(Date.now() + 15 * 60 * 1000), name: username}})
 
     const token = generateToken(user.id, res)
 
@@ -28,7 +29,7 @@ export async function signup(req,res) {
    
  } catch(err) {
        console.error(err)
-       res.status(500).json({msg: 'Error while signing up', error: err})
+       res.status(500).json({msg: 'Error while signing up'})
  }
 }
 
@@ -73,8 +74,15 @@ export async function verifyEmail(req,res) {
       if(!parsedData.success) return res.status(400).json({error: 'Invalid code', parsedData})
       const { code } = parsedData.data
 
-      const user = await prisma.user.findFirst({where: {verificationCode: code, verificationCodeExpiresAt: {gt: new Date()}}})
-      if(!user) return res.status(401).json({success: false, error: 'code expired or incorrect code'})
+      const user = await prisma.user.findFirst({where: {verificationCode: code}})
+      if(!user) return res.status(401).json({success: false, error: 'incorrect code'})
+
+      if(user.verificationCodeExpiresAt < new Date()) {
+          const newCode = Math.floor(Math.random() * 900000 + 100000).toString()
+          await prisma.user.update({where: {id: user.id}, data: {verificationCode: newCode, verificationCodeExpiresAt: new Date(Date.now() + 15 * 60 * 1000)}})
+          await sendVerificationEmail(user.email,newCode,res)
+          return res.status(401).json({success: false, error: 'code expired'})
+      }
 
       const updatedUser = await prisma.user.update({where: {id: user.id}, data: {isVerified: true, verificationCode: null, verificationCodeExpiresAt: null}})
 
@@ -85,5 +93,101 @@ export async function verifyEmail(req,res) {
       } catch (e) {
        console.error(e)
        return res.status(500).json({success: false, msg: 'Error while verifying email', error: e})
+    }
+}
+
+export async function forgotPassword(req,res){
+    try {
+    const parsedData = forgotPasswordSchema.safeParse(req.body)
+    if(!parsedData.success) return res.status(400).json({success: false,error: 'Invalid email address', parsedData})
+    const { email } = parsedData.data
+   
+    const user = await prisma.user.findUnique({where: {email}})
+    if(!user) return res.status(400).json({success: false, error: 'Email not found'})
+
+    const resetToken = crypto.randomBytes(20).toString('hex')
+    
+    await prisma.user.update({where: {id: user.id}, data: {resetPasswordToken: resetToken, resetPasswordTokenExpiresAt: new Date(Date.now() + 3 * 60 * 1000)}})
+
+    await sendPasswordResetEmail(user.email, `process.env.CLIENT_URL/reset-password/${resetToken}`,res)
+
+    res.status(200).json({success: true, msg: 'Reset Password mail sent successfully'})
+
+   } catch(e) {
+      console.error(e)
+      return res.status(500).json({success: false, msg: 'Internal server error'})
+   }
+}
+
+export async function resetPassword(req,res) {
+    try {
+
+        const token = req.params.token
+
+        const parsedData = resetPasswordSchema.safeParse(req.body)
+        if(!parsedData.success) return res.status(400).json({success: false, error: 'Invalid inputs', parsedData})
+        const {password , confirmPassword} = parsedData.data
+       
+        const user = await prisma.user.findFirst({where: {resetPasswordToken: token, resetPasswordTokenExpiresAt: {gt : new Date()}}})
+        if(!user) return res.status(401).json({success: false, error: 'Incorrect or expired token. Please ask for another reset password email'})
+
+        if(password != confirmPassword) return res.status(400).json({success: false, msg: 'Passwords do not match'})
+        const salt = bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password, salt)
+
+        await prisma.user.update({where: {id: user.id}, data: {password: hashedPassword, resetPasswordToken: null, resetPasswordTokenExpiresAt: null}})
+
+        await sendResetSuccessEmail(user.email, res)
+
+    } catch(e) {
+        console.error(e)
+        res.status(500).json({success: false, error: 'Error while resetting password', error: e})
+    }
+}
+
+export async function followUnfollowUser(req,res) {
+
+    try {
+  
+     const id = req.params.id
+
+     const currentUser = await prisma.user.findUnique({where: {id: req.userId}})
+     const userToFollow = await prisma.user.findUnique({where: {id: id}})
+
+     if(!currentUser || !userToFollow) return res.status(400).json({success: false, msg: 'User not found'})
+
+     if(id === req.userId) return res.status(400).json({success: false, msg: 'You cannot follow or unfollow yourself'})
+
+    const isFollowing = currentUser.following.includes(id)
+
+    await prisma.$transaction(async prisma => {
+    if(isFollowing) {
+        await prisma.user.update({where : {id: currentUser.id}, data: {following: currentUser.following.filter(id => id != userToFollow.id)}})
+        await prisma.user.update({where: {id: userToFollow.id}, data: {followers: userToFollow.followers.filter(id => id != currentUser.id)}})
+        return res.status(200).json({success: true, msg: 'user unfollowed successfully'})
+    } else {
+        await prisma.user.update({where: {id: currentUser.id}, data: {following: {set: [...currentUser.following, userToFollow.id]}}})
+        await prisma.user.update({where: {id: userToFollow.id}, data: {followers: {set: [...userToFollow.followers, currentUser.id]}}})
+        return res.status(200).json({success: true, msg: 'user followed successfully'})
+    }
+    })
+
+} catch(e) {
+    console.error(e)
+    return res.status(500).json({success: false, msg: 'Error while following a user'})
+}
+
+}
+
+export async function updateProfile(req,res) {
+    try {
+         
+        const parsedData = updateProfileSchema.safeParse(req.body)
+        if(!parsedData.success) return res.status(400).json({success: false, msg: 'Invalid inputs'})
+        const {name, profilePicture, bio} = parsedData.data
+
+    } catch(e) {
+        console.error(e)
+        res.status(500).json({success: false, msg: 'Error while updating profile'})
     }
 }

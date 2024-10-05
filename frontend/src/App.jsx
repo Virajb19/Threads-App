@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import Lenis from 'lenis'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import LoginPage from './pages/LoginPage'
 
 export default function App(){
     
@@ -13,8 +15,13 @@ export default function App(){
         return () => lenis.destroy()
    }, [])
 
+ return <main className="w-full">
+    
+   <BrowserRouter>
+     <Routes>
+        <Route path='/login' element={<LoginPage />}></Route>
+     </Routes>
+   </BrowserRouter>
 
- return <main className="w-full min-h-screen">
-     Hello
  </main>
 }
