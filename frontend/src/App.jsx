@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import Lenis from 'lenis'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
+import HomePage from './pages/HomePage'
 
 export default function App(){
     
@@ -19,7 +20,8 @@ export default function App(){
     
    <BrowserRouter>
      <Routes>
-        <Route path='/login' element={<LoginPage />}></Route>
+        <Route path='/' element={<HomePage />}/>
+        <Route path='/login' element={<LoginPage />} />
      </Routes>
    </BrowserRouter>
 

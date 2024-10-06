@@ -13,7 +13,7 @@ module.exports = {
         'dp': {'min': '1920px'},
       },
        fontSize: {
-        'c-xs': ['clamp(0.75rem, 1.5vw + 0.25rem, 1rem)', '1.25'],   // Extra Small
+        'c-xs': ['clamp(0.75rem, 1.5vw + 0.25rem, 2rem)', '1.25'],   // Extra Small
         'c-sm': ['clamp(0.875rem, 1.5vw + 0.375rem, 1.125rem)', '1.375'], // Small
         'c-lg': ['clamp(1rem, 1.5vw + 0.5rem, 1.25rem)', '1.5'],       // Large
         'c-xl': ['clamp(1.25rem, 2vw + 0.5rem, 1.5rem)', '1.5'],      // Extra Large

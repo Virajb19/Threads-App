@@ -147,12 +147,14 @@ export async function resetPassword(req,res) {
 
 export async function followUnfollowUser(req,res) {
 
-    try {
+try {
   
-     const id = parseInt(req.params.id)
+     const id = req.params.id
+     if(!id || isNaN(id)) return res.status(400).json({success: false, msg: 'Invalid user id'})
+     const userId = parseInt(id)
 
      const currentUser = await prisma.user.findUnique({where: {id: req.userId}})
-     const userToFollow = await prisma.user.findUnique({where: {id: id}})
+     const userToFollow = await prisma.user.findUnique({where: {id: userId}})
 
      if(!currentUser || !userToFollow) return res.status(400).json({success: false, msg: 'User not found'})
 
@@ -165,12 +167,13 @@ export async function followUnfollowUser(req,res) {
         await prisma.user.update({where : {id: currentUser.id}, data: {following: currentUser.following.filter(id => id != userToFollow.id)}})
         await prisma.user.update({where: {id: userToFollow.id}, data: {followers: userToFollow.followers.filter(id => id != currentUser.id)}})
         return res.status(200).json({success: true, msg: 'user unfollowed successfully'})
+
     } else {
         await prisma.user.update({where: {id: currentUser.id}, data: {following: {set: [...currentUser.following, userToFollow.id]}}})
         await prisma.user.update({where: {id: userToFollow.id}, data: {followers: {set: [...userToFollow.followers, currentUser.id]}}})
         return res.status(200).json({success: true, msg: 'user followed successfully'})
     }
-    })
+})
 
 } catch(e) {
     console.error(e)
@@ -195,5 +198,20 @@ export async function updateProfile(req,res) {
     } catch(e) {
         console.error(e)
         res.status(500).json({success: false, msg: 'Error while updating profile'})
+    }
+}
+
+export async function getProfile(req,res) {
+    try {
+
+        const username = req.params.username
+        const user = await prisma.user.findUnique({where: {username}})
+        if(!user) return res.status(400).json({success: false, msg: 'User not found'})
+
+        res.status(200).json({success: true, msg: 'user profile fetched successfully', user})
+
+    } catch(e) {
+        console.error(e)
+        res.status(500).json({success: false, msg: 'Error while getting user profile'})
     }
 }

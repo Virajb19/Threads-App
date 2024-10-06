@@ -1,9 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 
 function createPrismaClient() {
-   const client = new PrismaClient({
-       log: ['query', 'info', 'warn', 'error'],
-   })
+   const client = new PrismaClient()
    console.log("Prisma client created and connected to the database")
    return client
 }

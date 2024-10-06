@@ -6,6 +6,7 @@ import { prisma } from './utils/db.js'
 import rateLimit from 'express-rate-limit'
 import { userRouter } from './routes/userRoutes.js'
 import { verifyToken } from './middlewares/verifyToken.js'
+import { postRouter } from './routes/postRoutes.js'
 
 dotenv.config({})
 
@@ -14,7 +15,7 @@ const app = express()
 
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100, 
+  max: 20, 
   message: 'Too many requests from this IP, please try again after 15 minutes'
 })
 
@@ -24,8 +25,8 @@ app.use(cookieParser())
 app.use(cors({origin: process.env.CLIENT_URL, credentials: true}))
 app.use(generalLimiter)
 
-const publicPaths = ['/signin', '/signup']
-app.use('/api/v1/user',(req,res,next) => {
+const publicPaths = ['/api/v1/user/signin', '/api/v1/user/signup']
+app.use((req,res,next) => {
   if(publicPaths.includes(req.path)){
     return next()
   }
@@ -35,7 +36,7 @@ app.use('/api/v1/user',(req,res,next) => {
 
 // ROUTES
 app.use('/api/v1/user', userRouter)
-
+app.use('/api/v1/post', postRouter)
 
 app.get("/", (_, res) => res.send("<h1>Hello world</h1>"))
 
