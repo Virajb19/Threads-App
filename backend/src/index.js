@@ -14,7 +14,7 @@ const app = express()
 
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10, 
+  max: 100, 
   message: 'Too many requests from this IP, please try again after 15 minutes'
 })
 
@@ -23,8 +23,12 @@ app.use(express.json({ limit : '50mb' }))
 app.use(cookieParser())
 app.use(cors({origin: process.env.CLIENT_URL, credentials: true}))
 app.use(generalLimiter)
-app.use((req,res,next) => {
-  if(req.path === '/signin' || req.path === '/signup') return next()
+
+const publicPaths = ['/signin', '/signup']
+app.use('/api/v1/user',(req,res,next) => {
+  if(publicPaths.includes(req.path)){
+    return next()
+  }
   //PROTECTED ROUTES
   verifyToken(req,res,next)
 })

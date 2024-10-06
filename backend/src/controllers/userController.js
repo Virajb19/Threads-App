@@ -149,7 +149,7 @@ export async function followUnfollowUser(req,res) {
 
     try {
   
-     const id = req.params.id
+     const id = parseInt(req.params.id)
 
      const currentUser = await prisma.user.findUnique({where: {id: req.userId}})
      const userToFollow = await prisma.user.findUnique({where: {id: id}})
@@ -185,6 +185,12 @@ export async function updateProfile(req,res) {
         const parsedData = updateProfileSchema.safeParse(req.body)
         if(!parsedData.success) return res.status(400).json({success: false, msg: 'Invalid inputs'})
         const {name, profilePicture, bio} = parsedData.data
+
+        const user = await prisma.user.findFirst({where: {id: req.userId}})
+        if(!user) return res.status(400).json({success: false, msg: 'User not found'})
+
+        await prisma.user.update({where: {id: req.userId}, data: {name, profilePicture, bio}})
+        res.status(200).json({success: true, msg: 'user profile updated successfully'})
 
     } catch(e) {
         console.error(e)

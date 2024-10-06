@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken'
 
 export function verifyToken(req,res,next) {
     try {
-        const token = req.cookies.jwt
+        const token = req.cookies.jwt || req.headers.authorization.split(' ')[1]
+        console.log(req.path)
         if(!token) return res.status(400).json({success: false, error: 'Unauthorized - no token provided'})
         
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -12,6 +13,6 @@ export function verifyToken(req,res,next) {
         next()
     } catch(e) {
         console.error(e)
-        return res.status(500).json({success: false, error: 'Error while authorizing', error: e})
+        return res.status(500).json({success: false, error: 'Error while authorizing'})
     }
 }
