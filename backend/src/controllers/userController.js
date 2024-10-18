@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt'
 import { generateToken } from "../utils/generateTokenAndSetCookie.js";
 import { sendPasswordResetEmail, sendResetSuccessEmail, sendVerificationEmail, sendWelcomeEmail } from "../emails/Emails.js";
 import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
 
 export async function signup(req,res) {
  try {
@@ -12,39 +13,39 @@ export async function signup(req,res) {
     const {username, email, password} = userData.data
 
     const userExists = await prisma.user.findFirst({where : {OR : [{email}, {username}]}})
-    if(userExists) return res.status(409).json({error: 'User already exists'})
+    if(userExists) return res.status(409).json({msg: 'User already exists'})
 
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password,salt)
     const verificationCode = Math.floor(Math.random() * 900000 + 100000).toString()
     const user = await prisma.user.create({data : {username, email, password: hashedPassword, verificationCode, verificationCodeExpiresAt: new Date(Date.now() + 15 * 60 * 1000), name: username}})
 
-    const token = generateToken(user.id, res)
+    const token = generateToken(user, res)
 
     await sendVerificationEmail(user.email, verificationCode, res)
 
     const {password: _, ...userWithoutPassword} = user
 
-    res.status(201).json({success: true, msg: 'User created successfully', user: userWithoutPassword, token})
+    res.status(201).json({success: true, msg: 'User created successfully', user: userWithoutPassword,})
    
  } catch(err) {
        console.error(err)
-       res.status(500).json({msg: 'Error while signing up'})
+       res.status(500).json({msg: 'Error while signing up', error: err.message})
  }
 }
 
 export async function signin(req,res) {
  try {
     const userData = signInSchema.safeParse(req.body)
-    if(!userData.success) return res.status(400).json({error: 'Invalid user inputs', userData})
+    if(!userData.success) return res.status(400).json({msg: 'Invalid user inputs', userData})
 
     const {email, password} = userData.data
 
     const user = await prisma.user.findFirst({where: {email}})
     const isMatch = await bcrypt.compare(password,user?.password || "")
-    if(!user || !isMatch) return res.status(401).json({success: false, error : 'Invalid credentials'})
+    if(!user || !isMatch) return res.status(401).json({success: false, msg : 'Invalid credentials'})
 
-    const token = generateToken(user.id, res)
+    const token = generateToken(user, res)
 
     const updatedUser = await prisma.user.update({where: {email}, data: {lastLogin: new Date()}})
 
@@ -54,7 +55,7 @@ export async function signin(req,res) {
 
  } catch(err) {
      console.error(err)
-     res.status(500).json({msg: 'Error while logging in', error: err})
+     res.status(500).json({msg: 'Error while logging in', error: err.message})
  }
 }
 
@@ -64,7 +65,7 @@ export async function signout(_,res) {
         res.status(200).json({success: true, msg: 'Logged out successfully'})
     } catch(err) {
         console.error(err)
-        res.status(500).json({success: false, msg: 'Error while signing out', error: err})
+        res.status(500).json({success: false, msg: 'Error while signing out', error: err.message})
     }
 }
 
@@ -214,4 +215,19 @@ export async function getProfile(req,res) {
         console.error(e)
         res.status(500).json({success: false, msg: 'Error while getting user profile'})
     }
+}
+
+export async function checkAuth(req,res) {
+     try {
+           const token = req.cookies.jwt
+           if(!token) return res.status(401).json({isLoggedIn: false})
+           jwt.verify(token, process.env.JWT_SECRET, (err,decoded) => {
+           if(err) return res.status(403).json({isLoggedIn: false})
+            
+           res.status(200).json({isLoggedIn: true, user: decoded.user})
+        })
+     } catch (e) {
+        console.error(e)
+        res.status(500).json({success: false, msg: 'Error while authenticating user', error: e.message})
+     }
 }

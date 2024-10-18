@@ -1,0 +1,39 @@
+import React from 'react';
+import { Toaster, toast } from 'sonner';
+import './toastStyles.css'; // Import your custom CSS styles
+
+const App = () => {
+  const showSuccessNotification = () => {
+    toast.success('Logged in successfully!', {
+      style: {
+        color: '#ffffff',              // Text color
+        backgroundColor: '#2F855A',    // Green-700 background
+        padding: '15px 20px',
+      },
+      icon: '✅', // Custom icon
+    });
+  };
+
+  const showErrorNotification = () => {
+    toast.error('Login failed. Please try again.', {
+      style: {
+        color: '#ffffff',
+        backgroundColor: '#E53E3E',    // Red-700 background
+        padding: '15px 20px',
+      },
+      icon: '❌',
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={showSuccessNotification}>Show Success Notification</button>
+      <button onClick={showErrorNotification}>Show Error Notification</button>
+      <Toaster
+        position="top-right" // Notification position
+      />
+    </div>
+  );
+};
+
+export default App;

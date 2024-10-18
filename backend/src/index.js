@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit'
 import { userRouter } from './routes/userRoutes.js'
 import { verifyToken } from './middlewares/verifyToken.js'
 import { postRouter } from './routes/postRoutes.js'
+import { messageRouter } from './routes/messageRoutes.js'
 
 dotenv.config({})
 
@@ -14,8 +15,8 @@ const port = process.env.PORT || 3000
 const app = express()
 
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20, 
+  windowMs: 2 * 60 * 1000,
+  max: 100, 
   message: 'Too many requests from this IP, please try again after 15 minutes'
 })
 
@@ -37,6 +38,7 @@ app.use((req,res,next) => {
 // ROUTES
 app.use('/api/v1/user', userRouter)
 app.use('/api/v1/post', postRouter)
+app.use('/api/v1/message', messageRouter)
 
 app.get("/", (_, res) => res.send("<h1>Hello world</h1>"))
 
